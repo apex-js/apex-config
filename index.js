@@ -1,7 +1,7 @@
 var path = require('path');
 
 function configFactory () {
-
+	var THROW_ON_MISSING = false;
 	function $config (dataPath, defaultValue) {
 		var data = $config.$$data,
 			parts = dataPath.match($config.$$PATH_RE),
@@ -19,6 +19,9 @@ function configFactory () {
 				}
 			}
 			return out;
+		}
+		if (THROW_ON_MISSING) {
+			throw new Error('Missing config value for ' + dataPath);
 		}
 		return defaultValue;
 	}
@@ -47,6 +50,45 @@ function configFactory () {
 		}
 		return $config;
 	};
+
+	$config.throwOnMissingValue = function (shouldThrow) {
+		THROW_ON_MISSING = shouldThrow;
+	};
+
+
+
+	function snakeToCamel (str) {
+		return str.toLowerCase()
+			.replace(/_(.)/g, function (x, c) {
+				return c.toUpperCase();
+			});
+	}
+
+	function convertToPath (name) {
+		return name.split('__').slice(1).map(snakeToCamel)
+	}
+
+	$config.loadFromEnv = function (prefix) {
+		var re = new RegExp('^' + prefix);
+		var data = {};
+		var stack = Object
+			.keys(process.env)
+			.filter(function (name) {
+				return re.test(name);
+			})
+			.forEach(function (name) {
+				var path = convertToPath(name),
+					last = path.pop(),
+					len = path.length,
+					target = data;
+				for (var i = 0; i < len; i++) {
+					target = target[path[i]] || (target[path[i]] = {});
+				}
+				target[last] = process.env[name];
+			});
+
+		$config.$$data.push(data);
+	}
 
 	$config.reset = function () {
 		$config.$$data = [];

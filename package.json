@@ -19,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/apex-js/apex-config/issues"
   },
-  "homepage": "https://github.com/apex-js/apex-config"
+  "homepage": "https://github.com/apex-js/apex-config",
+  "devDependencies": {
+    "chai": "3.5.0"
+  }
 }
